@@ -6,9 +6,7 @@ MultiRaiders is an engaging multiplayer game built primarily with JavaScript and
 
 This repository includes the source code, assets, and configurations needed to run the game locally or deploy it to a web server.
 
-
 ## Features
-
 
 - Real-time multiplayer gameplay
 - Collaborative mission-based challenges
