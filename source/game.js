@@ -48,11 +48,12 @@ class PreloadScene extends Phaser.Scene {
     }
 }
 
-// 2. MainMenuScene: Visar titel, svårighetsval och startknapp
+// 2. MainMenuScene: Visar titel, val och startknapp
 class MainMenuScene extends Phaser.Scene {
     constructor() {
         super('MainMenuScene');
-        this.selectedDifficulty = 'medium';
+        this.selectedDifficulty = 'medium'; // Standard svårighetsgrad (hastighet etc)
+        this.selectedTableRange = '1-10'; // Standard tabellområde
     }
 
     create() {
@@ -61,25 +62,27 @@ class MainMenuScene extends Phaser.Scene {
         console.log("MainMenuScene: Creating menu...");
         this.add.image(gameWidth / 2, gameHeight / 2, 'sky').setScale(Math.max(gameWidth / 800, gameHeight / 600));
 
-        this.add.text(gameWidth / 2, gameHeight * 0.2, 'Multiplikations-\nRymdspelet', {
+        // Titel
+        this.add.text(gameWidth / 2, gameHeight * 0.15, 'Multiplikations-\nRymdspelet', {
             fontSize: '48px', fill: '#fff', align: 'center', stroke: '#000', strokeThickness: 4
         }).setOrigin(0.5);
 
-        this.add.text(gameWidth / 2, gameHeight * 0.45, 'Välj Svårighetsgrad:', {
-            fontSize: '24px', fill: '#fff', stroke: '#000', strokeThickness: 3
+        // --- Svårighetsval (Hastighet etc) ---
+        this.add.text(gameWidth / 2, gameHeight * 0.35, 'Välj Svårighetsgrad (Hastighet):', {
+            fontSize: '22px', fill: '#fff', stroke: '#000', strokeThickness: 3
         }).setOrigin(0.5);
 
         const difficulties = ['easy', 'medium', 'hard'];
         const difficultyLabels = { easy: 'Lätt', medium: 'Medel', hard: 'Svår' };
-        const buttonY = gameHeight * 0.55;
-        const buttonSpacing = 150;
-        let currentX = gameWidth / 2 - buttonSpacing;
+        const difficultyButtonY = gameHeight * 0.43;
+        const difficultyButtonSpacing = 150;
+        let currentDifficultyX = gameWidth / 2 - difficultyButtonSpacing;
 
         this.difficultyButtons = {};
 
         difficulties.forEach(level => {
-            const button = this.add.text(currentX, buttonY, difficultyLabels[level], {
-                fontSize: '28px', fill: '#fff', backgroundColor: '#555', padding: { x: 15, y: 8 },
+            const button = this.add.text(currentDifficultyX, difficultyButtonY, difficultyLabels[level], {
+                fontSize: '24px', fill: '#fff', backgroundColor: '#555', padding: { x: 15, y: 8 },
                 stroke: '#000', strokeThickness: 2,
                 shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 2, fill: true }
             }).setOrigin(0.5).setInteractive({ useHandCursor: true });
@@ -89,30 +92,65 @@ class MainMenuScene extends Phaser.Scene {
             button.on('pointerover', () => { if (this.selectedDifficulty !== level) button.setStyle({ backgroundColor: '#777' }); });
             button.on('pointerout', () => { if (this.selectedDifficulty !== level) button.setStyle({ backgroundColor: '#555' }); });
             this.difficultyButtons[level] = button;
-            currentX += buttonSpacing;
+            currentDifficultyX += difficultyButtonSpacing;
         });
+        this.selectDifficulty(this.selectedDifficulty); // Markera standard
 
-        this.selectDifficulty(this.selectedDifficulty);
+        // --- Val av Tabellområde ---
+         this.add.text(gameWidth / 2, gameHeight * 0.58, 'Välj Tabeller att Öva På:', {
+            fontSize: '22px', fill: '#fff', stroke: '#000', strokeThickness: 3
+        }).setOrigin(0.5);
 
-        const startButton = this.add.text(gameWidth / 2, gameHeight * 0.75, 'Starta Spel', {
+        const tableRanges = ['1-5', '5-10', '1-10']; // Definiera valen
+        const tableLabels = { '1-5': 'Tabell 1-5', '5-10': 'Tabell 5-10', '1-10': 'Tabell 1-10' };
+        const tableButtonY = gameHeight * 0.66;
+        const tableButtonSpacing = 180; // Lite mer utrymme
+        let currentTableX = gameWidth / 2 - tableButtonSpacing;
+
+        this.tableButtons = {};
+
+        tableRanges.forEach(range => {
+            const button = this.add.text(currentTableX, tableButtonY, tableLabels[range], {
+                fontSize: '24px', fill: '#fff', backgroundColor: '#555', padding: { x: 15, y: 8 },
+                stroke: '#000', strokeThickness: 2,
+                shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 2, fill: true }
+            }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+            button.setData('range', range);
+            button.on('pointerdown', () => this.selectTableRange(range));
+            button.on('pointerover', () => { if (this.selectedTableRange !== range) button.setStyle({ backgroundColor: '#777' }); });
+            button.on('pointerout', () => { if (this.selectedTableRange !== range) button.setStyle({ backgroundColor: '#555' }); });
+            this.tableButtons[range] = button;
+            currentTableX += tableButtonSpacing;
+        });
+        this.selectTableRange(this.selectedTableRange); // Markera standard
+
+        // --- Startknapp ---
+        const startButton = this.add.text(gameWidth / 2, gameHeight * 0.85, 'Starta Spel', {
             fontSize: '32px', fill: '#0f0', backgroundColor: '#333', padding: { x: 20, y: 10 },
             stroke: '#000', strokeThickness: 2,
             shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 4, fill: true }
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
         startButton.on('pointerdown', () => {
-            console.log(`MainMenuScene: Starting game with difficulty: ${this.selectedDifficulty}`);
-            this.scene.start('GameScene', { difficulty: this.selectedDifficulty });
+            console.log(`MainMenuScene: Starting game with difficulty: ${this.selectedDifficulty} and tables: ${this.selectedTableRange}`);
+            // Skicka med BÅDE vald svårighetsgrad OCH tabellområde till GameScene
+            this.scene.start('GameScene', {
+                difficulty: this.selectedDifficulty,
+                tables: this.selectedTableRange
+            });
         });
 
         startButton.on('pointerover', () => { startButton.setStyle({ fill: '#ff0' }); startButton.setScale(1.05); });
         startButton.on('pointerout', () => { startButton.setStyle({ fill: '#0f0' }); startButton.setScale(1.0); });
 
-        this.add.text(gameWidth / 2, gameHeight - 50, 'Piltangenter/Tryck för att styra, Mellanslag/Tryck för att skjuta.', {
+        // Instruktionstext
+        this.add.text(gameWidth / 2, gameHeight - 30, 'Piltangenter/Tryck för att styra, Mellanslag/Tryck för att skjuta.', {
             fontSize: '16px', fill: '#ccc', stroke: '#000', strokeThickness: 2
         }).setOrigin(0.5);
     }
 
+    // Funktion för att hantera val av svårighetsgrad (hastighet)
     selectDifficulty(level) {
         this.selectedDifficulty = level;
         console.log("Selected difficulty:", level);
@@ -120,6 +158,17 @@ class MainMenuScene extends Phaser.Scene {
             const btn = this.difficultyButtons[key];
             if (key === level) btn.setStyle({ backgroundColor: '#0a0', fill: '#fff' });
             else btn.setStyle({ backgroundColor: '#555', fill: '#fff' });
+        }
+    }
+
+    // Funktion för att hantera val av tabellområde
+    selectTableRange(range) {
+        this.selectedTableRange = range;
+        console.log("Selected table range:", range);
+        for (const key in this.tableButtons) {
+            const btn = this.tableButtons[key];
+            if (key === range) btn.setStyle({ backgroundColor: '#0a0', fill: '#fff' }); // Markerad
+            else btn.setStyle({ backgroundColor: '#555', fill: '#fff' }); // Omarkerad
         }
     }
 }
@@ -134,13 +183,23 @@ class GameScene extends Phaser.Scene {
         this.ENEMY_SCALE = 1.0;
         this.BULLET_SCALE = 1.0;
 
-        // --- Svårighetsinställningar ---
+        // --- Svårighetsinställningar (Hastighet etc) ---
         this.difficultySettings = {
             easy:   { enemySpeedMin: 50,  enemySpeedMax: 100, spawnDelay: 3500, bulletCooldown: 400 },
             medium: { enemySpeedMin: 80,  enemySpeedMax: 150, spawnDelay: 2500, bulletCooldown: 300 },
             hard:   { enemySpeedMin: 120, enemySpeedMax: 200, spawnDelay: 1800, bulletCooldown: 250 }
         };
         this.difficultyLevel = 'medium';
+
+        // --- Tabellinställningar ---
+        // Tolkning: Första faktorn är 1-10, andra faktorn begränsas av valet.
+        // Alternativ tolkning: Båda faktorerna begränsas (t.ex. 1-5 x 1-5). Ändra här vid behov.
+        this.tableSettings = {
+            '1-5':  { min1: 1, max1: 10, min2: 1, max2: 5 },
+            '5-10': { min1: 1, max1: 10, min2: 5, max2: 10 },
+            '1-10': { min1: 1, max1: 10, min2: 1, max2: 10 }  // Default
+        };
+        this.tableRange = '1-10'; // Standard om ingen data skickas
 
         // Spelvariabler
         this.player = null; this.cursors = null; this.fireKey = null;
@@ -150,10 +209,14 @@ class GameScene extends Phaser.Scene {
         this.lastFired = 0; this.enemySpawnTimer = null; this.canShoot = true; this.active = true;
     }
 
+    // Tar emot data (både svårighetsgrad och tabellområde)
     init(data) {
         console.log("GameScene init, received data:", data);
         this.difficultyLevel = data && data.difficulty ? data.difficulty : 'medium';
-        console.log("GameScene difficulty set to:", this.difficultyLevel);
+        this.tableRange = data && data.tables ? data.tables : '1-10'; // Hämta tabellval
+        console.log(`GameScene settings: Difficulty=${this.difficultyLevel}, Tables=${this.tableRange}`);
+
+        // Nollställ
         this.score = 0; this.lives = 3; this.canShoot = true; this.active = true; this.lastFired = 0;
         if (this.enemySpawnTimer) { this.enemySpawnTimer.destroy(); this.enemySpawnTimer = null; }
     }
@@ -162,7 +225,7 @@ class GameScene extends Phaser.Scene {
         this.active = true;
         const gameWidth = this.cameras.main.width;
         const gameHeight = this.cameras.main.height;
-        console.log("GameScene: Creating game elements for difficulty:", this.difficultyLevel);
+        console.log("GameScene: Creating game elements...");
         const currentDifficulty = this.difficultySettings[this.difficultyLevel];
 
         this.add.image(gameWidth / 2, gameHeight / 2, 'sky').setScale(Math.max(gameWidth / 800, gameHeight / 600));
@@ -171,7 +234,6 @@ class GameScene extends Phaser.Scene {
         this.player.setScale(this.PLAYER_SCALE);
         this.player.setCollideWorldBounds(true);
         this.player.setBodySize(this.player.displayWidth * 0.8, this.player.displayHeight * 0.8, true);
-        console.log("Player display size:", this.player.displayWidth, this.player.displayHeight);
 
         this.bullets = this.physics.add.group({ classType: Bullet, maxSize: 10, runChildUpdate: true });
         this.bullets.createCallback = (bullet) => {
@@ -193,7 +255,7 @@ class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.bullets, this.enemies, this.hitEnemy, null, this);
 
         this.updateUI();
-        this.generateNewProblem();
+        this.generateNewProblem(); // Genererar första problemet baserat på tabellval
 
         console.log("Setting spawn delay to:", currentDifficulty.spawnDelay);
         this.enemySpawnTimer = this.time.addEvent({
@@ -225,11 +287,21 @@ class GameScene extends Phaser.Scene {
     generateNewProblem() {
         if (this.lives <= 0 || !this.active) return;
 
-        this.currentProblem.num1 = Phaser.Math.Between(1, 10);
-        this.currentProblem.num2 = Phaser.Math.Between(1, 10);
+        // Hämta min/max för faktorer baserat på valt tabellområde
+        const currentTableSettings = this.tableSettings[this.tableRange];
+        if (!currentTableSettings) {
+            console.error("Invalid table range selected:", this.tableRange);
+            // Fallback till standard om något är fel
+             this.currentProblem.num1 = Phaser.Math.Between(1, 10);
+             this.currentProblem.num2 = Phaser.Math.Between(1, 10);
+        } else {
+            this.currentProblem.num1 = Phaser.Math.Between(currentTableSettings.min1, currentTableSettings.max1);
+            this.currentProblem.num2 = Phaser.Math.Between(currentTableSettings.min2, currentTableSettings.max2);
+        }
+
         this.correctAnswer = this.currentProblem.num1 * this.currentProblem.num2;
         this.problemText.setText(`${this.currentProblem.num1} × ${this.currentProblem.num2} = ?`);
-        console.log(`New problem: ${this.currentProblem.num1}x${this.currentProblem.num2}=${this.correctAnswer}`);
+        console.log(`New problem (${this.tableRange}): ${this.currentProblem.num1}x${this.currentProblem.num2}=${this.correctAnswer}`);
 
         this.canShoot = true;
     }
@@ -255,10 +327,11 @@ class GameScene extends Phaser.Scene {
         const answers = this.generateAnswers(this.correctAnswer, numberOfEnemies);
         Phaser.Utils.Array.Shuffle(answers);
 
+        // Hastighet styrs fortfarande av svårighetsgraden (Lätt/Medel/Svår)
         const currentDifficulty = this.difficultySettings[this.difficultyLevel];
         const speedMin = currentDifficulty.enemySpeedMin;
         const speedMax = currentDifficulty.enemySpeedMax;
-        console.log(`Spawning enemies with speed between ${speedMin} and ${speedMax}`);
+        // console.log(`Spawning enemies with speed between ${speedMin} and ${speedMax}`); // Lite mycket loggning kanske
 
         for (let i = 0; i < numberOfEnemies; i++) {
             const x = enemySpacing * (i + 1);
@@ -271,7 +344,6 @@ class GameScene extends Phaser.Scene {
             enemy.setOrigin(0.5);
             enemy.setVelocityY(Phaser.Math.Between(speedMin, speedMax));
             enemy.setBodySize(enemy.displayWidth * 0.8, enemy.displayHeight * 0.8, true);
-
 
             const answer = answers[i];
             const style = { fontSize: '18px', fill: '#fff', stroke: '#000', strokeThickness: 2, align: 'center' };
@@ -288,7 +360,7 @@ class GameScene extends Phaser.Scene {
 
     generateAnswers(correct, count) {
         const answers = new Set([correct]);
-        const minRange = Math.max(1, correct - 15);
+        const minRange = Math.max(1, correct - 15); // Justera detta intervall om det behövs
         const maxRange = correct + 15;
         while (answers.size < count) {
             let wrongAnswer;
@@ -308,6 +380,7 @@ class GameScene extends Phaser.Scene {
     }
 
     fireBullet(time) {
+        // Cooldown styrs av svårighetsgraden
         const currentDifficulty = this.difficultySettings[this.difficultyLevel];
         const bulletCooldown = currentDifficulty.bulletCooldown;
 
@@ -348,9 +421,9 @@ class GameScene extends Phaser.Scene {
             enemy.setActive(false);
             enemy.destroy();
 
-            this.clearEnemies();
+            this.clearEnemies(); // Rensa kvarvarande
             this.updateUI();
-            this.generateNewProblem();
+            this.generateNewProblem(); // Generera nästa problem baserat på tabellval
 
         } else {
             // Fel svar
@@ -403,10 +476,12 @@ class GameScene extends Phaser.Scene {
             if (e.active) e.setTint(0xaaaaaa);
         });
 
+        // Skicka med BÅDE poäng, svårighetsgrad OCH tabellområde
         this.time.delayedCall(1500, () => {
             this.scene.start('GameOverScene', {
                 score: this.score,
-                difficulty: this.difficultyLevel
+                difficulty: this.difficultyLevel,
+                tables: this.tableRange // Skicka med tabellvalet
             });
         });
     }
@@ -450,13 +525,16 @@ class GameOverScene extends Phaser.Scene {
         super('GameOverScene');
         this.finalScore = 0;
         this.difficultyLevel = 'medium';
-        this.restartKey = null; // *** NYTT: För att hålla reda på mellanslagstangenten ***
+        this.tableRange = '1-10'; // Standard om ingen skickas
+        this.restartKey = null;
     }
 
+    // Tar emot data (poäng, svårighetsgrad, tabellområde)
     init(data) {
         console.log("GameOverScene init, received data:", data);
         this.finalScore = data && data.score !== undefined ? data.score : 0;
         this.difficultyLevel = data && data.difficulty ? data.difficulty : 'medium';
+        this.tableRange = data && data.tables ? data.tables : '1-10'; // Spara tabellvalet
     }
 
     create() {
@@ -473,9 +551,12 @@ class GameOverScene extends Phaser.Scene {
              fontSize: '32px', fill: '#fff', stroke: '#000', strokeThickness: 3
          }).setOrigin(0.5);
 
-         this.add.text(gameWidth / 2, gameHeight / 2 + 40, `(Nivå: ${this.difficultyLevel})`, {
+         // Visa även vilken nivå och tabellområde som spelades
+         const settingsText = `(Nivå: ${this.difficultyLevel}, Tabell: ${this.tableRange})`;
+         this.add.text(gameWidth / 2, gameHeight / 2 + 40, settingsText, {
              fontSize: '18px', fill: '#ccc', stroke: '#000', strokeThickness: 2
          }).setOrigin(0.5);
+
 
         const restartButton = this.add.text(gameWidth / 2, gameHeight / 2 + 100, 'Spela Igen', {
             fontSize: '32px', fill: '#0f0', backgroundColor: '#333', padding: { x: 20, y: 10 },
@@ -502,36 +583,35 @@ class GameOverScene extends Phaser.Scene {
         menuButton.on('pointerover', () => { menuButton.setStyle({ backgroundColor: '#666' }); });
         menuButton.on('pointerout', () => { menuButton.setStyle({ backgroundColor: '#444' }); });
 
-        // *** NYTT: Lyssna efter mellanslag för att starta om ***
+        // Lyssna efter mellanslag för att starta om
         this.restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-        this.restartKey.on('down', this.restartGame, this); // Anropa gemensam funktion när tangent trycks ned
+        this.restartKey.on('down', this.restartGame, this);
 
-        // Lägg till text som indikerar att man kan trycka mellanslag (valfritt)
         this.add.text(gameWidth / 2, gameHeight - 30, 'Tryck MELLANSLAG för att spela igen', {
             fontSize: '16px', fill: '#aaa', stroke: '#000', strokeThickness: 1
         }).setOrigin(0.5);
     }
 
-    // *** NYTT: Gemensam funktion för att starta om spelet ***
+    // Gemensam funktion för att starta om spelet
     restartGame() {
-        // Förhindra att man startar om flera gånger snabbt om man håller nere tangenten
-        // (Även om scene.start() oftast hanterar detta bra)
-        if (!this.scene.isActive()) return; // Kolla om scenen fortfarande är aktiv
+        if (!this.scene.isActive()) return;
 
-        console.log(`GameOverScene: Restarting game with difficulty: ${this.difficultyLevel}`);
-        // Ta bort lyssnaren för tangenttryck innan vi byter scen (bra praxis)
+        console.log(`GameOverScene: Restarting game with difficulty: ${this.difficultyLevel} and tables: ${this.tableRange}`);
         if (this.restartKey) {
             this.restartKey.off('down', this.restartGame, this);
         }
-        // Skicka tillbaka SAMMA svårighetsgrad till GameScene
-        this.scene.start('GameScene', { difficulty: this.difficultyLevel });
+        // Skicka tillbaka BÅDE svårighetsgrad OCH tabellområde till GameScene
+        this.scene.start('GameScene', {
+             difficulty: this.difficultyLevel,
+             tables: this.tableRange
+        });
     }
 
-    // *** NYTT: Städa upp lyssnare när scenen stängs ***
+    // Städa upp lyssnare när scenen stängs
     shutdown() {
         console.log("GameOverScene shutting down...");
         if (this.restartKey) {
-            this.restartKey.off('down', this.restartGame, this); // Ta bort lyssnaren
+            this.restartKey.off('down', this.restartGame, this);
             this.restartKey = null;
         }
     }
