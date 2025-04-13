@@ -2,18 +2,18 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"> <title>Multiplikationsrymdspelet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"> <title>Multiplication Space Game</title>
     <script src="//cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     <style>
-        /* Grundläggande CSS för att centrera och ta bort marginaler */
+        /* Basic CSS to center and remove margins */
         html, body {
             margin: 0;
             padding: 0;
             height: 100%;
-            overflow: hidden; /* Förhindra scrollbars */
-            background-color: #000; /* Svart bakgrund utanför spelet */
+            overflow: hidden; /* Prevent scrollbars */
+            background-color: #000; /* Black background outside the game */
         }
-        /* Stilar för spelcontainern (om du använder 'parent' i config) */
+        /* Styles for the game container (if you use 'parent' in config) */
         #phaser-game-container {
             width: 100%;
             height: 100%;
@@ -21,10 +21,10 @@
             justify-content: center;
             align-items: center;
         }
-        /* Canvas tar upp tillgängligt utrymme inom containern/body */
+        /* Canvas takes up available space within the container/body */
         canvas {
             display: block;
-            /* width: 100%; */ /* Tas om hand av Phaser Scale Manager */
+            /* width: 100%; */ /* Handled by Phaser Scale Manager */
             /* height: 100%; */
         }
     </style>

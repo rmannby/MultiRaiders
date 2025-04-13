@@ -8,32 +8,32 @@ class PreloadScene extends Phaser.Scene {
 
     preload() {
         console.log("PreloadScene: Loading assets...");
-        // Ladda nödvändiga bilder (antar nu att dessa är 48x48)
+        // Load necessary images (assuming 48x48)
         this.load.image('sky', 'assets/sky.png');
         this.load.image('player', 'assets/playerShip.png');
         this.load.image('enemy', 'assets/enemyShip.png');
         this.load.image('bullet', 'assets/bullet.png');
 
-        // *** NYTT: Ladda ljudfiler ***
-        // Ersätt dessa med dina faktiska ljudfiler i assets-mappen!
-        // Format som stöds är t.ex. .mp3, .ogg, .wav
+        // *** NEW: Load audio files ***
+        // Replace these with your actual audio files in the assets folder!
+        // Supported formats are e.g. .mp3, .ogg, .wav
         console.log("PreloadScene: Loading audio...");
         try {
-            this.load.audio('shootSound', 'assets/shoot.mp3'); // Ljud för när spelaren skjuter
-            this.load.audio('hitCorrectSound', 'assets/hitCorrect.mp3'); // Ljud för rätt svar
-            this.load.audio('hitWrongSound', 'assets/hitWrong.mp3'); // Ljud för fel svar / förlorat liv
-            this.load.audio('gameOverSound', 'assets/gameOver.mp3'); // Ljud för game over
-            // this.load.audio('backgroundMusic', 'assets/music.mp3'); // Eventuell bakgrundsmusik
+            this.load.audio('shootSound', 'assets/shoot.mp3'); // Sound for when player shoots
+            this.load.audio('hitCorrectSound', 'assets/hitCorrect.mp3'); // Sound for correct answer
+            this.load.audio('hitWrongSound', 'assets/hitWrong.mp3'); // Sound for wrong answer / lost life
+            this.load.audio('gameOverSound', 'assets/gameOver.mp3'); // Sound for game over
+            // this.load.audio('backgroundMusic', 'assets/music.mp3'); // Optional background music
         } catch (error) {
             console.error("Error loading audio:", error);
-            // Visa fel om ljud inte kunde laddas (webbläsaren kanske inte stödjer formatet?)
+            // Show error if audio couldn't be loaded (browser might not support the format?)
              this.add.text(this.game.config.width / 2, this.game.config.height - 10, 'Warning: Could not load audio files.', {
                 fontSize: '12px', fill: '#ffdddd'
             }).setOrigin(0.5);
         }
 
 
-        // Visa en laddningsindikator
+        // Show a loading indicator
         let progressBar = this.add.graphics();
         let progressBox = this.add.graphics();
         const gameWidth = this.game.config.width;
@@ -55,7 +55,7 @@ class PreloadScene extends Phaser.Scene {
         }, this);
 
         this.load.on('loaderror', function (file) {
-            // Kolla specifikt om det är ett ljudfel (kan hända om format inte stöds)
+            // Specifically check if it's an audio error (can happen if format is not supported)
             if (file.type === 'audio') {
                  console.warn(`Could not load audio: ${file.key}. Format might not be supported or file missing.`);
             } else {
@@ -65,8 +65,7 @@ class PreloadScene extends Phaser.Scene {
                 }).setOrigin(0.5);
             }
         }, this);
-    }
-}
+    }}
 
 // 2. MainMenuScene: Visar titel, val och startknapp
 class MainMenuScene extends Phaser.Scene {
