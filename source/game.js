@@ -1,5 +1,11 @@
 // --- Re‑usable localStorage keys ---            // *** NEW (CONST)  ***
 const LS_KEYS = { NAME: 'mr_playerName', SCORE: 'mr_highScore' };
+// 1. Press F12 (or Cmd‑Opt‑I on macOS) to open DevTools.
+// 2. Choose “Console” and run
+// localStorage.removeItem('mr_highScore')
+// (You can also wipe the player name with
+// localStorage.removeItem('mr_playerName') or clear everything via
+// localStorage.clear().)
 
 // --- Scenes (Defined First) ---
 
