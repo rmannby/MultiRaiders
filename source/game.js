@@ -1,3 +1,6 @@
+// --- Re‑usable localStorage keys ---            // *** NEW (CONST)  ***
+const LS_KEYS = { NAME: 'mr_playerName', SCORE: 'mr_highScore' };
+
 // --- Scenes (Defined First) ---
 
 // 1. PreloadScene: Loads all assets (images, audio)
@@ -75,6 +78,8 @@ class MainMenuScene extends Phaser.Scene {
         super('MainMenuScene');
         this.selectedDifficulty = 'medium'; // Default difficulty (speed etc)
         this.selectedTableRange = '1-10'; // Default table range
+        this.playerName = localStorage.getItem(LS_KEYS.NAME) || 'Spelare'; // *** NEW ***
+        this.highScore  = parseInt(localStorage.getItem(LS_KEYS.SCORE) || '0', 10); // *** NEW ***
     }
 
     create() {
@@ -87,6 +92,30 @@ class MainMenuScene extends Phaser.Scene {
         this.add.text(gameWidth / 2, gameHeight * 0.15, 'Multiplikations-\nRymdspelet', {
             fontSize: '48px', fill: '#fff', align: 'center', stroke: '#000', strokeThickness: 4
         }).setOrigin(0.5);
+
+        // -----------------------------------------------------------------
+        // PLAYER‑NAME & HIGH‑SCORE UI                                     //
+        // -----------------------------------------------------------------
+        const nameStyle = { fontSize: '24px', fill: '#fff', stroke: '#000', strokeThickness: 2 };
+        this.nameText = this.add.text(gameWidth / 2, gameHeight * 0.22,
+            `Namn: ${this.playerName} (klicka för att ändra)`,               // *** NEW ***
+            nameStyle
+        ).setOrigin(0.5).setInteractive({ useHandCursor: true });            // *** NEW ***
+
+        this.nameText.on('pointerdown', () => {                              // *** NEW ***
+            const newName = window.prompt('Skriv ditt namn:', this.playerName);
+            if (newName && newName.trim().length) {
+                this.playerName = newName.trim();
+                localStorage.setItem(LS_KEYS.NAME, this.playerName);
+                this.nameText.setText(`Namn: ${this.playerName} (klicka för att ändra)`);
+            }
+        });
+
+        // High‑score text under the name
+        this.highScoreText = this.add.text(gameWidth / 2, gameHeight * 0.28, // *** NEW ***
+            `Högsta poäng: ${this.highScore}`,
+            { fontSize: '22px', fill: '#ff0', stroke: '#000', strokeThickness: 2 }
+        ).setOrigin(0.5);
 
         // --- Difficulty Selection (Speed etc) ---
         this.add.text(gameWidth / 2, gameHeight * 0.35, 'Välj Svårighetsgrad (Hastighet):', { // UI Text remains Swedish
@@ -211,6 +240,7 @@ class GameScene extends Phaser.Scene {
         this.scoreText = null; this.livesText = null; this.problemText = null;
         this.currentProblem = { num1: 0, num2: 0 }; this.correctAnswer = 0;
         this.lastFired = 0; this.enemySpawnTimer = null; this.canShoot = true; this.active = true;
+        this.playerName = 'Spelare'; // *** NEW ***
     }
 
     // Receives data (both difficulty and table range)
@@ -593,6 +623,7 @@ class GameOverScene extends Phaser.Scene {
         this.finalScore = 0;
         this.difficultyLevel = 'medium';
         this.tableRange = '1-10'; // Default if none passed
+        this.playerName = 'Spelare'; // *** NEW ***
         this.restartKey = null; // Reference to the Spacebar key
     }
 
@@ -602,34 +633,114 @@ class GameOverScene extends Phaser.Scene {
         this.finalScore = data && data.score !== undefined ? data.score : 0;
         this.difficultyLevel = data && data.difficulty ? data.difficulty : 'medium';
         this.tableRange = data && data.tables ? data.tables : '1-10'; // Store the table range
+        this.playerName = (data && data.playerName) ?? (localStorage.getItem(LS_KEYS.NAME) || 'Spelare'); // *** NEW ***
     }
-
     create() {
         const gameWidth = this.cameras.main.width;
         const gameHeight = this.cameras.main.height;
         console.log("GameOverScene: Creating game over screen...");
         // Semi-transparent background
-        this.add.image(gameWidth / 2, gameHeight / 2, 'sky').setScale(Math.max(gameWidth / 800, gameHeight / 600)).setAlpha(0.7);
+        this.add.image(gameWidth / 2, gameHeight / 2, 'sky')
+        .setScale(Math.max(gameWidth / 800, gameHeight / 600))
+        .setAlpha(0.7);
 
-        // Game Over text
-        this.add.text(gameWidth / 2, gameHeight / 2 - 100, 'Spelet Slut!', { fontSize: '48px', fill: '#f00', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5); // UI Text remains Swedish
-        // Final score text
-        this.add.text(gameWidth / 2, gameHeight / 2, `Din poäng: ${this.finalScore}`, { fontSize: '32px', fill: '#fff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5); // UI Text remains Swedish
-        // Display settings used
-        const settingsText = `(Nivå: ${this.difficultyLevel}, Tabell: ${this.tableRange})`; // UI Text remains Swedish
-        this.add.text(gameWidth / 2, gameHeight / 2 + 40, settingsText, { fontSize: '18px', fill: '#ccc', stroke: '#000', strokeThickness: 2 }).setOrigin(0.5);
+        // ------------------------------------------------------------------
+        // "Spelet Slut!"
+        // ------------------------------------------------------------------
+        const title = this.add.text(
+                gameWidth / 2, gameHeight / 2 - 120,
+                'Spelet Slut!',
+                { fontSize: '48px', fill: '#f00',
+                  stroke: '#000', strokeThickness: 4 }
+        ).setOrigin(0.5);
 
+        let cy = title.getBottomCenter().y + 30;               // cursor
+
+        // ------------------------------------------------------------------
+        // Score line  (player name + score)
+        // ------------------------------------------------------------------
+        const scoreLine = this.add.text(
+                gameWidth / 2, cy,
+                `${this.playerName} fick ${this.finalScore} poäng`,
+                { fontSize: '32px', fill: '#fff',
+                  stroke: '#000', strokeThickness: 3 }
+        ).setOrigin(0.5);
+
+        cy += scoreLine.height + 8;
+
+        // ------------------------------------------------------------------
+        // Settings (difficulty / tables)
+        // ------------------------------------------------------------------
+        const settingsLine = this.add.text(
+                gameWidth / 2, cy,
+                `(Nivå: ${this.difficultyLevel}, Tabell: ${this.tableRange})`,
+                { fontSize: '18px', fill: '#ccc',
+                  stroke: '#000', strokeThickness: 2 }
+        ).setOrigin(0.5);
+
+        cy += settingsLine.height + 12;
+
+        // ------------------------------------------------------------------
+        // High‑score + “NYTT REKORD!” (if applicable)
+        // ------------------------------------------------------------------
+        const storedHigh = parseInt(localStorage.getItem(LS_KEYS.SCORE) || '0', 10);
+        const isNewHigh  = this.finalScore > storedHigh;
+        if (isNewHigh) localStorage.setItem(LS_KEYS.SCORE, this.finalScore.toString());
+
+        this.add.text(
+                gameWidth / 2, cy,
+                `Högsta poäng: ${Math.max(storedHigh, this.finalScore)}`,
+                { fontSize: '24px', fill: '#ff0',
+                  stroke: '#000', strokeThickness: 3 }
+        ).setOrigin(0.5);
+
+        if (isNewHigh) {
+            cy += 28;
+            this.add.text(
+                    gameWidth / 2, cy,
+                    'NYTT REKORD!',
+                    { fontSize: '26px', fill: '#0f0',
+                      stroke: '#000', strokeThickness: 3 }
+            ).setOrigin(0.5);
+            cy += 6;
+        }
+
+        cy += 40;                                              // gap before buttons
+
+        // ------------------------------------------------------------------
+        // Restart & Main‑Menu buttons
+        // ------------------------------------------------------------------
         // Restart button
-        const restartButton = this.add.text(gameWidth / 2, gameHeight / 2 + 100, 'Spela Igen', { fontSize: '32px', fill: '#0f0', backgroundColor: '#333', padding: { x: 20, y: 10 }, stroke: '#000', strokeThickness: 2, shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 4, fill: true } }).setOrigin(0.5).setInteractive({ useHandCursor: true }); // UI Text remains Swedish
-        restartButton.on('pointerdown', () => { this.restartGame(); }); // Call common restart function
-        restartButton.on('pointerover', () => { restartButton.setStyle({ fill: '#ff0' }); restartButton.setScale(1.05); });
-        restartButton.on('pointerout', () => { restartButton.setStyle({ fill: '#0f0' }); restartButton.setScale(1.0); });
+        const restartButton = this.add.text(
+                gameWidth / 2, cy,
+                'Spela Igen',
+                { fontSize: '32px', fill: '#0f0', backgroundColor: '#333',
+                  padding: { x: 20, y: 10 }, stroke: '#000', strokeThickness: 2,
+                  shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 4, fill: true } }
+        ).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
-        // Main Menu button
-         const menuButton = this.add.text(gameWidth / 2, gameHeight / 2 + 160, 'Huvudmeny', { fontSize: '24px', fill: '#fff', backgroundColor: '#444', padding: { x: 15, y: 8 }, stroke: '#000', strokeThickness: 1 }).setOrigin(0.5).setInteractive({ useHandCursor: true }); // UI Text remains Swedish
-        menuButton.on('pointerdown', () => { console.log("GameOverScene: Returning to Main Menu..."); this.scene.start('MainMenuScene'); });
+        // >>> add the three listeners that were in the original version
+        restartButton.on('pointerdown', () => { this.restartGame(); });
+        restartButton.on('pointerover', () => { restartButton.setStyle({ fill: '#ff0' }); restartButton.setScale(1.05); });
+        restartButton.on('pointerout',  () => { restartButton.setStyle({ fill: '#0f0' }); restartButton.setScale(1.0); });
+
+        cy += restartButton.height + 20;
+
+        // Main‑menu button
+        const menuButton = this.add.text(
+                gameWidth / 2, cy,
+                'Huvudmeny',
+                { fontSize: '24px', fill: '#fff', backgroundColor: '#444',
+                  padding: { x: 15, y: 8 }, stroke: '#000', strokeThickness: 1 }
+        ).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+        // >>> same here – re‑attach the listeners
+        menuButton.on('pointerdown', () => {
+            console.log("GameOverScene: Returning to Main Menu…");
+            this.scene.start('MainMenuScene');
+        });
         menuButton.on('pointerover', () => { menuButton.setStyle({ backgroundColor: '#666' }); });
-        menuButton.on('pointerout', () => { menuButton.setStyle({ backgroundColor: '#444' }); });
+        menuButton.on('pointerout',  () => { menuButton.setStyle({ backgroundColor: '#444' }); });
 
         // *** NEW: Listen for Spacebar to restart ***
         this.restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
