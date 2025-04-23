@@ -301,6 +301,17 @@ class GameScene extends Phaser.Scene {
         this.livesText = this.add.text(gameWidth - 16, 16, 'Liv: 3', { fontSize: '24px', fill: '#fff', stroke: '#000', strokeThickness: 3 }).setOrigin(1, 0); // UI Text remains Swedish
         this.problemText = this.add.text(gameWidth / 2, 30, 'X × Y = ?', { fontSize: '32px', fill: '#ff0', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5); // UI Text remains Swedish
 
+        // -------------------------------------------------------------
+        //  NYTT: Feedback‑text som syns kort vid fel svar
+        // -------------------------------------------------------------
+        this.feedbackText = this.add.text(
+                gameWidth / 2, 80,                // precis under uppgiften
+                '',
+                { fontSize: '28px', fill: '#ff8888',
+                  stroke: '#000', strokeThickness: 3 })
+            .setOrigin(0.5)
+            .setAlpha(0);                         // osynlig från början
+
         // Collision detection
         this.physics.add.overlap(this.bullets, this.enemies, this.hitEnemy, null, this); // Bullet hits enemy
 
@@ -516,6 +527,10 @@ class GameScene extends Phaser.Scene {
             this.lives -= 1;
             this.sound.play('hitWrongSound'); // *** PLAY WRONG HIT SOUND ***
             this.cameras.main.shake(150, 0.015); // Shake camera
+
+            // ---- VISA FACIT ----
+            this.showIncorrectAnswer();
+
             // Visual feedback for wrong hit
             enemy.setTint(0xff8888); // Tint enemy red
             if (enemy.answerText && enemy.answerText.active) enemy.answerText.setTint(0xff8888); // Tint text red
@@ -543,6 +558,9 @@ class GameScene extends Phaser.Scene {
         this.cameras.main.shake(100, 0.01); // Shake camera
         this.updateUI();
 
+        // ---- VISA FACIT ----
+        this.showIncorrectAnswer();
+
         // Destroy text before enemy
         if (enemy.answerText && enemy.answerText.active) enemy.answerText.destroy();
         enemy.destroy(); // Destroy enemy sprite
@@ -555,6 +573,30 @@ class GameScene extends Phaser.Scene {
     updateUI() {
         if (this.scoreText) this.scoreText.setText(`Poäng: ${this.score}`); // UI Text remains Swedish
         if (this.livesText) this.livesText.setText(`Liv: ${this.lives}`); // UI Text remains Swedish
+    }
+
+    // -------------------------------------------------------------
+    //  NYTT: Visar korrekt svar vid fel
+    // -------------------------------------------------------------
+    showIncorrectAnswer() {
+        if (!this.feedbackText) return;
+
+        const msg = `Fel! ${this.currentProblem.num1} × ${this.currentProblem.num2} = ${this.correctAnswer}`;
+
+        // Avbryt ev. pågående tween (om flera fel snabbt efter varann)
+        this.tweens.killTweensOf(this.feedbackText);
+
+        // Visa texten direkt …
+        this.feedbackText.setText(msg).setAlpha(1);
+
+        // … och tona bort den efter ~1,5 sek
+        this.tweens.add({
+            targets:  this.feedbackText,
+            alpha:    0,
+            duration: 400,
+            delay:    1100,
+            ease:     'Power1'
+        });
     }
 
     // Handles the game over sequence
