@@ -95,7 +95,7 @@ class MainMenuScene extends Phaser.Scene {
         this.add.image(gameWidth / 2, gameHeight / 2, 'sky').setScale(Math.max(gameWidth / 800, gameHeight / 600)); // Scale background to cover
 
         // Title
-        this.add.text(gameWidth / 2, gameHeight * 0.15, 'Multiplikations-\nRymdspelet', {
+        this.add.text(gameWidth / 2, gameHeight * 0.15, 'MultiRaider', {
             fontSize: '48px', fill: '#fff', align: 'center', stroke: '#000', strokeThickness: 4
         }).setOrigin(0.5);
 
