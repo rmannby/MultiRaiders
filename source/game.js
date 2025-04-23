@@ -1,5 +1,9 @@
 // --- Re‑usable localStorage keys ---            // *** NEW (CONST)  ***
-const LS_KEYS = { NAME: 'mr_playerName', SCORE: 'mr_highScore' };
+const LS_KEYS = {
+    NAME:       'mr_playerName',
+    SCORE:      'mr_highScore',
+    SCORE_NAME: 'mr_highScoreName'      // ★ NYTT – vem som har rekordet
+};
 // 1. Press F12 (or Cmd‑Opt‑I on macOS) to open DevTools.
 // 2. Choose “Console” and run
 // localStorage.removeItem('mr_highScore')
@@ -85,7 +89,8 @@ class MainMenuScene extends Phaser.Scene {
         this.selectedDifficulty = 'medium'; // Default difficulty (speed etc)
         this.selectedTableRange = '1-10'; // Default table range
         this.playerName = localStorage.getItem(LS_KEYS.NAME) || 'Spelare'; // *** NEW ***
-        this.highScore  = parseInt(localStorage.getItem(LS_KEYS.SCORE) || '0', 10); // *** NEW ***
+        this.highScore  = parseInt(localStorage.getItem(LS_KEYS.SCORE) || '0', 10);
+        this.highHolder = localStorage.getItem(LS_KEYS.SCORE_NAME) || '—';
     }
 
     create() {
@@ -119,7 +124,7 @@ class MainMenuScene extends Phaser.Scene {
 
         // High‑score text under the name
         this.highScoreText = this.add.text(gameWidth / 2, gameHeight * 0.28, // *** NEW ***
-            `Högsta poäng: ${this.highScore}`,
+            `Högsta poäng: ${this.highScore} av ${shortenName(this.highHolder)}`,
             { fontSize: '22px', fill: '#ff0', stroke: '#000', strokeThickness: 2 }
         ).setOrigin(0.5);
 
@@ -731,13 +736,19 @@ class GameOverScene extends Phaser.Scene {
         // ------------------------------------------------------------------
         // High‑score + “NYTT REKORD!” (if applicable)
         // ------------------------------------------------------------------
-        const storedHigh = parseInt(localStorage.getItem(LS_KEYS.SCORE) || '0', 10);
-        const isNewHigh  = this.finalScore > storedHigh;
-        if (isNewHigh) localStorage.setItem(LS_KEYS.SCORE, this.finalScore.toString());
+        const storedHigh     = parseInt(localStorage.getItem(LS_KEYS.SCORE) || '0', 10);
+        let   storedHighName = localStorage.getItem(LS_KEYS.SCORE_NAME) || '—';
+
+        const isNewHigh = this.finalScore > storedHigh;
+        if (isNewHigh) {
+            localStorage.setItem(LS_KEYS.SCORE,      this.finalScore.toString());
+            localStorage.setItem(LS_KEYS.SCORE_NAME, this.playerName);
+            storedHighName = this.playerName;        // uppdatera för visningen nedan
+        }
 
         this.add.text(
                 gameWidth / 2, cy,
-                `Högsta poäng: ${Math.max(storedHigh, this.finalScore)}`,
+                `Högsta poäng: ${Math.max(storedHigh, this.finalScore)} av ${shortenName(storedHighName)}`,
                 { fontSize: '24px', fill: '#ff0',
                   stroke: '#000', strokeThickness: 3 }
         ).setOrigin(0.5);
@@ -857,3 +868,9 @@ const config = {
 window.onload = () => {
     const game = new Phaser.Game(config);
 };
+
+// Returnerar första ordet om namnet är längre än 12 tecken
+function shortenName(name = '') {
+    if (name.length <= 12) return name;
+    return name.split(' ')[0];          // ta första delen
+}
