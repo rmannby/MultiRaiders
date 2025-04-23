@@ -224,7 +224,7 @@ class GameScene extends Phaser.Scene {
 
         // --- Difficulty Settings (Speed etc) ---
         this.difficultySettings = {
-            easy:   { enemySpeedMin: 50,  enemySpeedMax: 100, spawnDelay: 3500, bulletCooldown: 400 },
+            easy:   { enemySpeedMin: 30,  enemySpeedMax: 75, spawnDelay: 3500, bulletCooldown: 400 },
             medium: { enemySpeedMin: 80,  enemySpeedMax: 150, spawnDelay: 2500, bulletCooldown: 300 },
             hard:   { enemySpeedMin: 120, enemySpeedMax: 200, spawnDelay: 1800, bulletCooldown: 250 }
         };
